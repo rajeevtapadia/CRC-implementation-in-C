@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int inp_head_index;
 
@@ -22,14 +23,13 @@ int firstOne(int* xorArr, int keySize){
     return -1;
 }
 
-void shift(int* xorArr, int* key, int keySize){
-    for(int i = 0; i < keySize; i++){
-        xorArr[i] = xorArr[i] ^ key[i];
-    }
+void shift(int* xorArr, int keySize){
+    for(int i = 0; i< keySize-1; i++)
+            xorArr[i] = xorArr[i+1];
 }
 
-void XOR(int* key, int* input, int* xorArr, int keySize, int frameSize){
-    while (inp_head_index<frameSize){
+void XOR(char* func, int* key, int* input, int* xorArr, int keySize, int frameSize){
+    while (inp_head_index<frameSize+1){
         // xor operation
         for(int i = 0; i < keySize; i++){
             xorArr[i] = xorArr[i] ^ key[i];
@@ -37,41 +37,26 @@ void XOR(int* key, int* input, int* xorArr, int keySize, int frameSize){
         // finding first one
         int firstOneIndex;
         firstOneIndex = firstOne(xorArr, keySize);
-        if (firstOneIndex == -1)
-            printf("no zeros found");
+        if (firstOneIndex == -1){
+            if (stricmp(func, "decode") == 0){
+                printf("\nNo zeros found\n");
+                inp_head_index++;
+            }
+            else if(stricmp(func, "encode") == 0)
+                xorArr[0] = input[inp_head_index++];
+        }
         // left shift
         for(int i = 0; i < firstOneIndex; i++){
-            shift(xorArr, key, keySize);
+            shift(xorArr, keySize);
             // appending input bit to the temp array
             xorArr[keySize-1] = input[inp_head_index++];
         }
     }
 }
 
-////        // appending input bit to the temp array
-////        xorArr[keySize-1] = input[inp_head_index];
-////        inp_head_index++;
-////    }
-//
-//    while(xorArr[0] == 0){
-//        // shift bits
-//        for(int i = 0; i< keySize-1; i++){
-//            xorArr[i] = xorArr[i+1];
-//        }
-//        // appending input bit to the temp array
-//        xorArr[keySize-1] = input[inp_head_index];
-//        inp_head_index++;
-//        if(inp_head_index-1 > frameSize)
-//            break;
-//    }
-//}
-
 int* crc(int* key, int* input, int* xorArr, int keySize, int frameSize){
     inp_head_index = keySize;
-    XOR(key, input, xorArr, keySize, frameSize);
-//    while(inp_head_index != frameSize){
-//        XOR(key, input, xorArr, keySize, frameSize);
-//    }
+    XOR("encode", key, input, xorArr, keySize, frameSize);
 
     printf("The remainder that needs to be appended: ");
     printArr(xorArr, keySize-1);
@@ -88,14 +73,14 @@ int* crc(int* key, int* input, int* xorArr, int keySize, int frameSize){
 
 void checkIntegrity(int *dataArr, int *crckey, int frameSize, int keySize){
     inp_head_index = keySize;
-//    int *tempArr = (int*) malloc(sizeof(int)*keySize);
     int tempArr[keySize];
+    printf("\nFrame recieved: ");
+    printArr(dataArr, frameSize);
     for(int i = 0; i < keySize; i++){
         tempArr[i] = dataArr[i];
     }
-    while(inp_head_index != frameSize+1){
-        XOR(crckey, dataArr, tempArr, keySize, frameSize);
-    }
+    XOR("decode", crckey, dataArr, tempArr, keySize, frameSize);
+
     for(int i = 0; i < keySize; i++){
         if(tempArr[i] == 0)
             continue;
@@ -104,6 +89,7 @@ void checkIntegrity(int *dataArr, int *crckey, int frameSize, int keySize){
             return;
         }
     }
+    printf("Data Integrity check successful\n");
 }
 
 int main() {
@@ -125,9 +111,9 @@ int main() {
 //    int* xorArray = (int*)malloc(sizeof(int)*crcSize);
 
     // test case
-int inputArr[11] = {1,1,0,0,0,1,1,0,0,0,0};
+int inputArr[11] = {1,0,0,0,0,1,1,0,0,0,0};
 int crckey[5] = {1, 1, 0, 0, 1};
-int xorArray[5] = {1,1,0,0,0};
+int xorArray[5] = {1,0,0,0,0};
 crcSize = 5;
 frameSize = 11;
     int sampledataarr[11] = {1 ,1, 0, 0, 0, 1, 1, 1, 1, 0, 1};
@@ -161,7 +147,7 @@ frameSize = 11;
 
     int* dataArr = crc(crckey, inputArr, xorArray, crcSize, frameSize);
 
-//    checkIntegrity(dataArr, crckey, frameSize, crcSize);
+    checkIntegrity(dataArr, crckey, frameSize, crcSize);
 
     return 0;
 }
