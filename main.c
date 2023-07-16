@@ -2,8 +2,6 @@
 // complete implementation pending
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 int inp_head_index;
 
@@ -28,7 +26,7 @@ void shift(int* xorArr, int keySize){
             xorArr[i] = xorArr[i+1];
 }
 
-void XOR(char* func, int* key, int* input, int* xorArr, int keySize, int frameSize){
+void XOR(int* key, int* input, int* xorArr, int keySize, int frameSize){
     while (inp_head_index<frameSize+1){
         // xor operation
         for(int i = 0; i < keySize; i++){
@@ -38,12 +36,9 @@ void XOR(char* func, int* key, int* input, int* xorArr, int keySize, int frameSi
         int firstOneIndex;
         firstOneIndex = firstOne(xorArr, keySize);
         if (firstOneIndex == -1){
-            if (stricmp(func, "decode") == 0){
-                printf("\nNo zeros found\n");
-                inp_head_index++;
-            }
-            else if(stricmp(func, "encode") == 0)
+            if ( inp_head_index < frameSize )
                 xorArr[0] = input[inp_head_index++];
+            else inp_head_index++;
         }
         // left shift
         for(int i = 0; i < firstOneIndex; i++){
@@ -56,7 +51,7 @@ void XOR(char* func, int* key, int* input, int* xorArr, int keySize, int frameSi
 
 int* crc(int* key, int* input, int* xorArr, int keySize, int frameSize){
     inp_head_index = keySize;
-    XOR("encode", key, input, xorArr, keySize, frameSize);
+    XOR(key, input, xorArr, keySize, frameSize);
 
     printf("The remainder that needs to be appended: ");
     printArr(xorArr, keySize-1);
@@ -79,7 +74,7 @@ void checkIntegrity(int *dataArr, int *crckey, int frameSize, int keySize){
     for(int i = 0; i < keySize; i++){
         tempArr[i] = dataArr[i];
     }
-    XOR("decode", crckey, dataArr, tempArr, keySize, frameSize);
+    XOR(crckey, dataArr, tempArr, keySize, frameSize);
 
     for(int i = 0; i < keySize; i++){
         if(tempArr[i] == 0)
@@ -111,13 +106,11 @@ int main() {
 //    int* xorArray = (int*)malloc(sizeof(int)*crcSize);
 
     // test case
-int inputArr[11] = {1,0,0,0,0,1,1,0,0,0,0};
-int crckey[5] = {1, 1, 0, 0, 1};
-int xorArray[5] = {1,0,0,0,0};
-crcSize = 5;
-frameSize = 11;
-    int sampledataarr[11] = {1 ,1, 0, 0, 0, 1, 1, 1, 1, 0, 1};
-
+    int inputArr[11] = {1,0,0,0,0,1,1,0,0,0,0};
+    int crckey[5] = {1, 1, 0, 0, 1};
+    int xorArray[5] = {1,0,0,0,0};
+    crcSize = 5;
+    frameSize = 11;
 
 
 //    //taking input array;
